@@ -1,4 +1,4 @@
 <plugin>
   <name>ensime-implicits</name>
-  <classname>org.ensime.plugin.ImplicitsPlugin</classname>
+  <classname>org.ensime.plugin.EnsimeImplicitPlugin</classname>
 </plugin>
