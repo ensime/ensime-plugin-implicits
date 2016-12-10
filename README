@@ -1,0 +1,3 @@
+A plugin for ensime-server (and potentially scala-ide) that rewrites `shapeless.cachedImplicit` to avoid doing any work.
+
+This results in a super fast editing experience at the cost of not actually checking that the implicit derivation will succeeed, leaving the derivation for your build tool's compiler.
