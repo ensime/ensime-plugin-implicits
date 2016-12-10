@@ -30,9 +30,9 @@ class EnsimeImplicitPlugin(override val global: Global) extends Plugin {
   }
 
   /**
-    * Replace all calls to cachedImplicit with `null`. This makes the presentation compiler
-    * faster, at the expense of not type-checking that the said implicit actually exists.
-    */
+   * Replace all calls to cachedImplicit with `null`. This makes the presentation compiler
+   * faster, at the expense of not type-checking that the said implicit actually exists.
+   */
   private val NullCachedImplicit = new TransformingComponent(global) {
     import global._
 
@@ -40,13 +40,20 @@ class EnsimeImplicitPlugin(override val global: Global) extends Plugin {
 
     override val phaseName: String = "null-cachedImplicit"
 
+    // best way to inspect a tree, just call this
+    def debug(name: String, tree: Tree): Unit = {
+      global.reporter.warning(tree.pos, s"$name: ${showCode(tree)}\n${showRaw(tree)}")
+    }
+
     override def transform = {
       case tree @ ValDef(mods, name, tpe, TypeApply(Ident(CachedImplicit), _)) =>
         if (tpe == EmptyTree) {
-          warning(tree.pos, s"Missing explicit type in call to `cachedImplicit`.")
+          reporter.error(tree.pos, s"Missing explicit type in call to `cachedImplicit`.")
           tree
-        } else
+        } else {
+          reporter.warning(tree.pos, s"This `cachedImplicit` call is not doing any work.")
           treeCopy.ValDef(tree, mods, name, tpe, Literal(Constant(null)))
+        }
       case t => t
     }
   }

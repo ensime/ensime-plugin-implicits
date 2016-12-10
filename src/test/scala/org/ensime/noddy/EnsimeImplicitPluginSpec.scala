@@ -5,9 +5,11 @@ import org.ensime.pcplod._
 
 class EnsimeImplicitPluginSpec extends FlatSpec with Matchers {
   "EnsimeImplicitPlugin" should "replace simple cachedImplicit" in {
-    withPcPlod { pc =>
-      pc.loadScala("Simple1.scala")
-      println(pc.messages)
+    withMrPlod("Simple1.scala") { mr =>
+      println(mr.messages)
+
+      val foo = List()
+
     }
   }
 }
