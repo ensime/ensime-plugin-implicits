@@ -46,15 +46,28 @@ class EnsimeImplicitPlugin(override val global: Global) extends Plugin {
     }
 
     override def transform = {
-      case tree @ ValDef(mods, name, tpe, TypeApply(Ident(CachedImplicit), _)) =>
-        if (tpe == EmptyTree) {
+      case tree @ ValDef(mods, name, tpt: TypeTree, TypeApply(Ident(CachedImplicit), _)) =>
+        if (tpt.original == EmptyTree || (tpt.original eq null)) {
           reporter.error(tree.pos, s"Missing explicit type in call to `cachedImplicit`.")
           tree
         } else {
           reporter.warning(tree.pos, s"This `cachedImplicit` call is not doing any work.")
-          treeCopy.ValDef(tree, mods, name, tpe, Literal(Constant(null)))
+          treeCopy.ValDef(tree, mods, name, tpt, Literal(Constant(null)))
         }
-      case t => t
+
+      case tree @ ValDef(mods, name, tpt, Ident(CachedImplicit)) =>
+        println("matched!")
+        if (tpt == EmptyTree) {
+          reporter.error(tree.pos, s"Missing explicit type in call to `cachedImplicit`.")
+          tree
+        } else {
+          reporter.warning(tree.pos, s"This `cachedImplicit` call is not doing any work.")
+          treeCopy.ValDef(tree, mods, name, tpt, q"null.asInstanceOf[$tpt]")
+        }
+
+      case t =>
+        //debug("", t);
+        t
     }
   }
 
