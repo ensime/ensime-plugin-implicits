@@ -14,14 +14,19 @@ libraryDependencies ++= Seq(
   "org.ensime" %% "pcplod" % "1.1.0" % Test
 )
 
-javaOptions in Test ++= Seq(
-  s"""-Dpcplod.settings=${(scalacOptions in Test).value.mkString(",")}""",
-  s"""-Dpcplod.classpath=${(fullClasspath in Test).value.map(_.data).mkString(",")}"""
-)
+javaOptions in Test ++= {
+  val jar = (packageBin in Compile).value
+  val options = {
+    (scalacOptions in Test).value :+
+    s"-Xplugin:${jar.getAbsolutePath}" :+
+    s"-Jdummy=${jar.lastModified}"
+  }.mkString(",")
+  val classpath = (fullClasspath in Test).value.map(_.data).mkString(",")
+  Seq(
+    s"""-Dpcplod.settings=$options""",
+    s"""-Dpcplod.classpath=$classpath"""
+  )
+}
 
 // too awkward to remove the deprecated warning for 2.10 / 2.11 diffs
 scalacOptions -= "-Xfatal-warnings"
-scalacOptions in Test ++= {
-  val jar = (packageBin in Compile).value
-  Seq(s"-Xplugin:${jar.getAbsolutePath}", s"-Jdummy=${jar.lastModified}") // ensures recompile
-}
