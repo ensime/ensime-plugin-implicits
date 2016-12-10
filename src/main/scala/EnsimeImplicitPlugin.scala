@@ -11,8 +11,8 @@ class EnsimeImplicitPlugin(override val global: Global) extends Plugin {
   override val name: String = "ensime-implicits"
 
   abstract class TransformingComponent(override val global: Global)
-      extends PluginComponent
-      with TypingTransformers {
+    extends PluginComponent
+    with TypingTransformers {
 
     override def newPhase(prev: Phase): Phase = new StdPhase(prev) {
       override def apply(unit: global.CompilationUnit): Unit = newTransformer(unit).transformUnit(unit)
