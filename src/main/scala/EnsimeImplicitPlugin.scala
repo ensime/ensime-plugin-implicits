@@ -41,32 +41,34 @@ class EnsimeImplicitPlugin(override val global: Global) extends Plugin {
     override val phaseName: String = "null-cachedImplicit"
 
     // best way to inspect a tree, just call this
-    def debug(name: String, tree: Tree): Unit = {
-      global.reporter.warning(tree.pos, s"$name: ${showCode(tree)}\n${showRaw(tree)}")
+    private def debug(name: String, tree: Tree): Unit = {
+      println(s"$name ${tree.id} ${tree.pos}: ${showCode(tree)}\n${showRaw(tree)}")
     }
+
+    private def missingExplicitType(t: Tree) = reporter.error(t.pos, "Missing explicit type on implicit value when calling `cachedImplicit`")
+    private def notDoingAnyWork(t: Tree) = reporter.warning(t.pos, s"`cachedImplicit` is not doing any work (ensime plugin)")
 
     override def transform = {
       case tree @ ValDef(mods, name, tpt: TypeTree, TypeApply(Ident(CachedImplicit), _)) =>
         if (tpt.original == EmptyTree || (tpt.original eq null)) {
-          reporter.error(tree.pos, s"Missing explicit type in call to `cachedImplicit`.")
+          missingExplicitType(tree)
           tree
         } else {
-          reporter.warning(tree.pos, s"This `cachedImplicit` call is not doing any work.")
-          treeCopy.ValDef(tree, mods, name, tpt, Literal(Constant(null)))
+          notDoingAnyWork(tree)
+          treeCopy.ValDef(tree, mods, name, tpt, atPos(tree.rhs.pos) { Literal(Constant(null)) })
         }
 
       case tree @ ValDef(mods, name, tpt, Ident(CachedImplicit)) =>
-        println("matched!")
         if (tpt == EmptyTree) {
-          reporter.error(tree.pos, s"Missing explicit type in call to `cachedImplicit`.")
+          missingExplicitType(tree)
           tree
         } else {
-          reporter.warning(tree.pos, s"This `cachedImplicit` call is not doing any work.")
-          treeCopy.ValDef(tree, mods, name, tpt, q"null.asInstanceOf[$tpt]")
+          notDoingAnyWork(tree)
+          val target = tpt.duplicate.setPos(NoPosition)
+          treeCopy.ValDef(tree, mods, name, tpt, atPos(tree.rhs.pos) { q"null.asInstanceOf[$target]" })
         }
 
       case t =>
-        //debug("", t);
         t
     }
   }
