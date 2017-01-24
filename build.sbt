@@ -4,6 +4,7 @@ name := "ensime-plugin-implicits"
 
 sonatypeGithub := ("ensime", name.value)
 licenses := Seq(Apache2)
+startYear := Some(2016)
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-compiler" % scalaVersion.value,
